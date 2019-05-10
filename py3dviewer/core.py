@@ -572,7 +572,7 @@ class Viewer:
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture)
 
         # Draw
-        gl.glDrawArrays(gl.GL_TRIANGLE_STRIP, 0, len(self.model_vertices) // 3)
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(self.model_vertices) // 3)
 
         # Unbind
         gl.glBindVertexArray(0)
