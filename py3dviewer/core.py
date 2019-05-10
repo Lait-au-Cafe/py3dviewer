@@ -1,3 +1,9 @@
+"""
+@file core.py
+@version 0.1.0
+@author Lait-au-Cafe
+@date 10/05/2019
+"""
 # -*- coding: utf-8 -*-
 import sys
 import os
