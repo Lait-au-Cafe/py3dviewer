@@ -19,3 +19,5 @@ if __name__ == "__main__":
         if not viewer.update():
             print("Exit. ")
             break
+        model_vertices = [v * 1.0002 for v in model_vertices]
+        viewer.update_model(model_vertices, model_uvmap)

@@ -81,6 +81,18 @@ class Viewer:
     default_camera_property: CameraProperty
 
     """
+    @var vertex_buffer
+    @brief The ID of vertex buffer. 
+    """
+    vertex_buffer: int
+
+    """
+    @var uv_buffer
+    @brief The ID of uv buffer. 
+    """
+    uv_buffer: int
+
+    """
     @var va_object
     @brief The vertext array object of OpenGL which stores model_vertices and model_uvmap. 
     """
@@ -150,6 +162,28 @@ class Viewer:
         print("Space: Reset the camera position. ")
         print(":================================:")
         print()
+
+    def update_model(self, model_vertices: typing.List[float], model_uvmap: typing.List[float]):
+        """
+        @fn update_model()
+        @brief Update the model data to be rendered. 
+        @param model_vertices The list of vertices. 
+        @param model_uvmap The list of uvs. 
+        """
+        # vertex buffer
+        c_vertex_buffer = (ctypes.c_float*len(model_vertices))(*model_vertices)
+        c_vertex_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_vertices)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertex_buffer)
+        gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_vertex_buffer_size, c_vertex_buffer)
+
+        # uv buffer
+        c_uv_buffer = (ctypes.c_float*len(model_uvmap))(*model_uvmap)
+        c_uv_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_uvmap)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.uv_buffer)
+        gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_uv_buffer_size, c_uv_buffer)
+
+        # unbind
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
     def update_camera_matrix(self):
         """
@@ -271,34 +305,34 @@ class Viewer:
 
         # --- Vertex buffer ---
         # Generate & bind buffer
-        vertex_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vertex_buffer)
+        self.vertex_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertex_buffer)
 
         # Allocate memory
         c_vertex_buffer = (ctypes.c_float*len(model_vertices))(*model_vertices)
         gl.glBufferData(gl.GL_ARRAY_BUFFER, c_vertex_buffer, gl.GL_DYNAMIC_DRAW)
-        size_expected = ctypes.sizeof(ctypes.c_float) * len(model_vertices)
+        c_vertex_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_vertices)
         size_allocated = gl.glGetBufferParameteriv(gl.GL_ARRAY_BUFFER, gl.GL_BUFFER_SIZE)
 
-        if size_allocated != size_expected:
+        if size_allocated != c_vertex_buffer_size:
             print("[GL Error] Failed to allocate memory for buffer. ")
-            gl.glDeleteBuffers(1, vertex_buffer);
+            gl.glDeleteBuffers(1, self.vertex_buffer);
             sys.exit()
 
         # --- UV buffer ---
         # Generate & bind buffer
-        uv_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, uv_buffer)
+        self.uv_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.uv_buffer)
 
         # Allocate memory
         c_uv_buffer = (ctypes.c_float*len(model_uvmap))(*model_uvmap)
         gl.glBufferData(gl.GL_ARRAY_BUFFER, c_uv_buffer, gl.GL_DYNAMIC_DRAW)
-        size_expected = ctypes.sizeof(ctypes.c_float) * len(model_uvmap)
+        c_uv_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_uvmap)
         size_allocated = gl.glGetBufferParameteriv(gl.GL_ARRAY_BUFFER, gl.GL_BUFFER_SIZE)
 
-        if size_allocated != size_expected:
+        if size_allocated != c_uv_buffer_size:
             print("[GL Error] Failed to allocate memory for buffer. ")
-            gl.glDeleteBuffers(1, uv_buffer);
+            gl.glDeleteBuffers(1, self.uv_buffer);
             sys.exit()
 
         # --- Bind to vertex array object ---
@@ -306,10 +340,12 @@ class Viewer:
         gl.glBindVertexArray(self.va_object)
 
         gl.glEnableVertexAttribArray(0)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vertex_buffer)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertex_buffer)
+        gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_vertex_buffer_size, c_vertex_buffer)
         gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
         gl.glEnableVertexAttribArray(1)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, uv_buffer)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.uv_buffer)
+        gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_uv_buffer_size, c_uv_buffer)
         gl.glVertexAttribPointer(1, 2, gl.GL_FLOAT, gl.GL_FALSE, 0, None)
 
         gl.glBindVertexArray(0)
@@ -469,6 +505,11 @@ class Viewer:
             tmat = glm.rotate(tmat, glm.radians(rot.y), glm.vec3(0., 1., 0.))
             tmat = glm.rotate(tmat, glm.radians(rot.z), glm.vec3(0., 0., 1.))
             self.camera_property.transform_matrix = tmat * self.camera_property.transform_matrix
+
+        if glfw.get_key(self.window, glfw.KEY_R) == glfw.PRESS:
+            tmat = glm.rotate(tmat, glm.radians(0.032), glm.vec3(0., 0., 1.))
+            self.camera_property.transform_matrix = self.camera_property.transform_matrix * tmat
+
 
         # Camera motion (mouse)
         current_cursor_status = CursorStatus(
