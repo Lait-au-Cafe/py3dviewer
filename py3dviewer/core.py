@@ -84,13 +84,13 @@ class Viewer:
     @var vertex_buffer
     @brief The ID of vertex buffer. 
     """
-    vertex_buffer: int
+    vertex_buffer: np.uint32
 
     """
     @var uv_buffer
     @brief The ID of uv buffer. 
     """
-    uv_buffer: int
+    uv_buffer: np.uint32
 
     """
     @var va_object
@@ -474,8 +474,8 @@ class Viewer:
         else:
             trans = glm.vec3(0.)
             rot = glm.vec3(0.)
-            trans_delta = 0.01
-            rot_delta = 0.005
+            trans_delta = 0.05
+            rot_delta = 0.05
             if glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS:
                 if glfw.get_key(self.window, glfw.KEY_LEFT_SHIFT) != glfw.PRESS:
                     trans.z += trans_delta
