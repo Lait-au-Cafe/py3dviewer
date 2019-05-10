@@ -10,7 +10,7 @@ $ pip install -e git://github.com/Lait-au-Cafe/py3dviewer.git@master#egg=py3dvie
 
 A minimum code to display a simple square plane is like below. 
 
-```
+```Python
 import py3dviewer
 
 
