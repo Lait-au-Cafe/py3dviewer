@@ -16,5 +16,5 @@ setup(
     author_email='laitaucafe8@gmail.com', 
     url='https://github.com/Lait-au-Cafe/py3dviewer', 
     license=license, 
-    packages=find_packages(exclude=('docs'))
+    install_requires=load_requires_from_file('requirements.txt')
 )
