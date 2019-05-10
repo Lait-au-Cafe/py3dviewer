@@ -7,6 +7,9 @@ with open('README.md') as f:
 with open('LICENSE') as f:
     license = f.read()
 
+with open('requirements.txt') as f:
+    requirements = [pkg_name.strip() for pkg_name in f.readlines()]
+
 setup(
     name='py3dviewer', 
     version='0.1.0', 
@@ -16,5 +19,5 @@ setup(
     author_email='laitaucafe8@gmail.com', 
     url='https://github.com/Lait-au-Cafe/py3dviewer', 
     license=license, 
-    install_requires=load_requires_from_file('requirements.txt')
+    install_requires=requirements
 )
