@@ -24,7 +24,7 @@ if __name__ == "__main__":
         1.0, 0.0, 
         0.0, 0.0]
 
-    viewer = py3dviewer.Viewer(model_vertices, model_uvmap, "img/invader.png", "Sample")
+    viewer = py3dviewer.Viewer("Test Simple", model_vertices, model_uvmap, "img/invader.png")
     while True:
         if not viewer.update():
             print("Exit. ")
