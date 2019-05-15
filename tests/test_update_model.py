@@ -10,24 +10,22 @@ if __name__ == "__main__":
          10,  10, 0., 
         -10,  10, 0., 
          10, -10, 0., 
-
-        -10,  10, 0., 
-         10, -10, 0., 
         -10, -10, 0.]
+
+    model_indices = [
+        0, 1, 2, 
+        1, 2, 3]
 
     model_uvmap = [
         1.0, 1.0, 
         0.0, 1.0, 
         1.0, 0.0, 
-
-        0.0, 1.0, 
-        1.0, 0.0, 
         0.0, 0.0]
 
-    viewer = py3dviewer.Viewer("Test Update Model", model_vertices, model_uvmap, "img/invader.png")
+    viewer = py3dviewer.Viewer("Test Update Model", model_vertices, model_indices, model_uvmap, "img/invader.png")
     while True:
         if not viewer.update():
             print("Exit. ")
             break
         model_vertices = [v * 1.0002 for v in model_vertices]
-        viewer.update_model(model_vertices, model_uvmap)
+        viewer.update_model(model_vertices, model_indices, model_uvmap)

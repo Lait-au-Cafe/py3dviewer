@@ -193,8 +193,8 @@ class Viewer:
         gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_vertex_buffer_size, c_vertex_buffer)
 
         # index buffer
-        c_index_buffer = (ctypes.c_float*len(model_indices))(*model_indices)
-        c_index_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_indices)
+        c_index_buffer = (ctypes.c_uint32*len(model_indices))(*model_indices)
+        c_index_buffer_size = ctypes.sizeof(ctypes.c_uint32) * len(model_indices)
         gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
         gl.glBufferSubData(gl.GL_ELEMENT_ARRAY_BUFFER, 0, c_index_buffer_size, c_index_buffer)
 
@@ -603,13 +603,14 @@ class Viewer:
         #========================================
         # Initialize
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
+        #gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
 
         # Bind program
         gl.glUseProgram(self.shader_program)
 
         # Bind buffer
         gl.glBindVertexArray(self.va_object)
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
 
         # Bind buffer
         gl.glActiveTexture(gl.GL_TEXTURE0)
