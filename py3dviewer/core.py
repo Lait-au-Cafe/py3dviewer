@@ -51,6 +51,12 @@ class Viewer:
     model_vertices: typing.List[float]
 
     """
+    @var model_indices
+    @brief The list of model vertices ([ID1 ID2 ID3 ...]). 
+    """
+    model_indices: typing.List[int]
+
+    """
     @var model_uvmap
     @brief The list of correspondence between model vertices and texture uv coordinate ([U1 V1 U2 V2 ...]). 
     """
@@ -85,6 +91,12 @@ class Viewer:
     @brief The ID of vertex buffer. 
     """
     vertex_buffer: np.uint32
+
+    """
+    @var index_buffer
+    @brief The ID of index buffer. 
+    """
+    index_buffer: np.uint32
 
     """
     @var uv_buffer
@@ -163,11 +175,15 @@ class Viewer:
         print(":================================:")
         print()
 
-    def update_model(self, model_vertices: typing.List[float], model_uvmap: typing.List[float]):
+    def update_model(self, 
+        model_vertices: typing.List[float], 
+        model_indices: typing.List[int], 
+        model_uvmap: typing.List[float]):
         """
         @fn update_model()
         @brief Update the model data to be rendered. 
         @param model_vertices The list of vertices. 
+        @param model_indices The list of indices. 
         @param model_uvmap The list of uvs. 
         """
         # vertex buffer
@@ -175,6 +191,12 @@ class Viewer:
         c_vertex_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_vertices)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertex_buffer)
         gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_vertex_buffer_size, c_vertex_buffer)
+
+        # index buffer
+        c_index_buffer = (ctypes.c_float*len(model_indices))(*model_indices)
+        c_index_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_indices)
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
+        gl.glBufferSubData(gl.GL_ELEMENT_ARRAY_BUFFER, 0, c_index_buffer_size, c_index_buffer)
 
         # uv buffer
         c_uv_buffer = (ctypes.c_float*len(model_uvmap))(*model_uvmap)
@@ -243,7 +265,12 @@ class Viewer:
         [print(f"{key}: {type(val)}") for key, val in vars(self).items()]
         print(" ====================================== ")
 
-    def __init__(self, model_vertices: typing.List[float], model_uvmap: typing.List[float], texture_filename: str, window_title: str):
+    def __init__(self, 
+        window_title: str, 
+        model_vertices: typing.List[float], 
+        model_indices: typing.List[int], 
+        model_uvmap: typing.List[float], 
+        texture_filename: str):
         """
         @fn __init__()
         @brief Initialization of viewer.  
@@ -300,11 +327,10 @@ class Viewer:
         # Prepare Buffers
         #========================================
         print("- Preparing buffers.")
-        self.model_vertices = model_vertices
-        self.model_uvmap = model_uvmap
 
         # --- Vertex buffer ---
         # Generate & bind buffer
+        self.model_vertices = model_vertices
         self.vertex_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertex_buffer)
 
@@ -319,8 +345,26 @@ class Viewer:
             gl.glDeleteBuffers(1, self.vertex_buffer);
             sys.exit()
 
+        # --- Index buffer ---
+        # Generate & bind buffer
+        self.model_indices = model_indices
+        self.index_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
+
+        # Allocate memory
+        c_index_buffer = (ctypes.c_uint32*len(model_indices))(*model_indices)
+        gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, c_index_buffer, gl.GL_DYNAMIC_DRAW)
+        c_index_buffer_size = ctypes.sizeof(ctypes.c_uint32) * len(model_indices)
+        size_allocated = gl.glGetBufferParameteriv(gl.GL_ELEMENT_ARRAY_BUFFER, gl.GL_BUFFER_SIZE)
+
+        if size_allocated != c_index_buffer_size:
+            print("[GL Error] Failed to allocate memory for buffer. ")
+            gl.glDeleteBuffers(1, self.index_buffer);
+            sys.exit()
+
         # --- UV buffer ---
         # Generate & bind buffer
+        self.model_uvmap = model_uvmap
         self.uv_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.uv_buffer)
 
@@ -559,7 +603,7 @@ class Viewer:
         #========================================
         # Initialize
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        #gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
 
         # Bind program
         gl.glUseProgram(self.shader_program)
@@ -572,7 +616,9 @@ class Viewer:
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture)
 
         # Draw
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(self.model_vertices) // 3)
+        #gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(self.model_vertices) // 3)
+        gl.glDrawElements(gl.GL_TRIANGLES, len(self.model_indices), 
+                gl.GL_UNSIGNED_INT, None)
 
         # Unbind
         gl.glBindVertexArray(0)
