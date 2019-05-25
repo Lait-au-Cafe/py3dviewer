@@ -23,7 +23,7 @@ if __name__ == "__main__":
         1.0, 0.0, 
         0.0, 0.0]
 
-    viewer = py3dviewer.Viewer("Test Update Model Size", model_vertices, model_indices[:3], model_uvmap, "img/invader.png")
+    viewer = py3dviewer.Viewer("Test Lazy Regist.", [], [], [], "img/invader.png")
     timer_start = datetime.now()
     while True:
         if not viewer.update():

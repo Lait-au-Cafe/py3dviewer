@@ -186,28 +186,69 @@ class Viewer:
         @param model_indices The list of indices. 
         @param model_uvmap The list of uvs. 
         """
-        # register to instance variables
-        self.model_vertices = model_vertices
-        self.model_indices = model_indices
-        self.model_uvmap = model_uvmap
-
-        # vertex buffer
+        # --- Vertex buffer ---
         c_vertex_buffer = (ctypes.c_float*len(model_vertices))(*model_vertices)
         c_vertex_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_vertices)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.vertex_buffer)
-        gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_vertex_buffer_size, c_vertex_buffer)
 
-        # index buffer
+        if len(model_vertices) > len(self.model_vertices):
+            # Reallocate memory
+            gl.glBufferData(gl.GL_ARRAY_BUFFER, c_vertex_buffer, gl.GL_DYNAMIC_DRAW)
+            c_vertex_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_vertices)
+            size_allocated = gl.glGetBufferParameteriv(gl.GL_ARRAY_BUFFER, gl.GL_BUFFER_SIZE)
+
+            if size_allocated != c_vertex_buffer_size:
+                print("[GL Error] Failed to allocate memory for buffer. ")
+                gl.glDeleteBuffers(1, self.vertex_buffer);
+                sys.exit()
+        else:
+            # Update elements
+            gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_vertex_buffer_size, c_vertex_buffer)
+
+        self.model_vertices = model_vertices
+
+        # --- Index buffer ---
         c_index_buffer = (ctypes.c_uint32*len(model_indices))(*model_indices)
         c_index_buffer_size = ctypes.sizeof(ctypes.c_uint32) * len(model_indices)
         gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
-        gl.glBufferSubData(gl.GL_ELEMENT_ARRAY_BUFFER, 0, c_index_buffer_size, c_index_buffer)
 
-        # uv buffer
+        if len(model_indices) > len(self.model_indices):
+            # Reallocate memory
+            gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, c_index_buffer, gl.GL_DYNAMIC_DRAW)
+            c_index_buffer_size = ctypes.sizeof(ctypes.c_uint32) * len(model_indices)
+            size_allocated = \
+                gl.glGetBufferParameteriv(gl.GL_ELEMENT_ARRAY_BUFFER, gl.GL_BUFFER_SIZE)
+
+            if size_allocated != c_index_buffer_size:
+                print("[GL Error] Failed to allocate memory for buffer. ")
+                gl.glDeleteBuffers(1, self.index_buffer);
+                sys.exit()
+        else:
+            # Update elements
+            gl.glBufferSubData(gl.GL_ELEMENT_ARRAY_BUFFER, 0, c_index_buffer_size, c_index_buffer)
+
+        self.model_indices = model_indices
+
+        # --- UV buffer ---
         c_uv_buffer = (ctypes.c_float*len(model_uvmap))(*model_uvmap)
         c_uv_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_uvmap)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.uv_buffer)
-        gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_uv_buffer_size, c_uv_buffer)
+
+        if len(model_uvmap) > len(self.model_uvmap):
+            # Reallocate memory
+            gl.glBufferData(gl.GL_ARRAY_BUFFER, c_uv_buffer, gl.GL_DYNAMIC_DRAW)
+            c_uv_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_uvmap)
+            size_allocated = gl.glGetBufferParameteriv(gl.GL_ARRAY_BUFFER, gl.GL_BUFFER_SIZE)
+
+            if size_allocated != c_uv_buffer_size:
+                print("[GL Error] Failed to allocate memory for buffer. ")
+                gl.glDeleteBuffers(1, self.uv_buffer);
+                sys.exit()
+        else:
+            # Update elements
+            gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, c_uv_buffer_size, c_uv_buffer)
+
+        self.model_uvmap = model_uvmap
 
         # unbind
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
