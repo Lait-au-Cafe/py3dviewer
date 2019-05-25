@@ -186,6 +186,11 @@ class Viewer:
         @param model_indices The list of indices. 
         @param model_uvmap The list of uvs. 
         """
+        # register to instance variables
+        self.model_vertices = model_vertices
+        self.model_indices = model_indices
+        self.model_uvmap = model_uvmap
+
         # vertex buffer
         c_vertex_buffer = (ctypes.c_float*len(model_vertices))(*model_vertices)
         c_vertex_buffer_size = ctypes.sizeof(ctypes.c_float) * len(model_vertices)
@@ -608,22 +613,24 @@ class Viewer:
         # Bind program
         gl.glUseProgram(self.shader_program)
 
-        # Bind buffer
-        gl.glBindVertexArray(self.va_object)
-        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
+        # Draw model
+        if len(self.model_indices) // 3 > 0:
+            # Bind buffer
+            gl.glBindVertexArray(self.va_object)
+            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
 
-        # Bind buffer
-        gl.glActiveTexture(gl.GL_TEXTURE0)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture)
+            # Bind buffer
+            gl.glActiveTexture(gl.GL_TEXTURE0)
+            gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture)
 
-        # Draw
-        #gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(self.model_vertices) // 3)
-        gl.glDrawElements(gl.GL_TRIANGLES, len(self.model_indices), 
-                gl.GL_UNSIGNED_INT, None)
+            # Draw
+            #gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(self.model_vertices) // 3)
+            gl.glDrawElements(gl.GL_TRIANGLES, len(self.model_indices), 
+                    gl.GL_UNSIGNED_INT, None)
 
-        # Unbind
-        gl.glBindVertexArray(0)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+            # Unbind
+            gl.glBindVertexArray(0)
+            gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
         # Update
         glfw.swap_buffers(self.window)
