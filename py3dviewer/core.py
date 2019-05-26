@@ -33,6 +33,13 @@ class CameraProperty:
                 field_of_view = self.field_of_view)
 
 @dataclasses.dataclass
+class LightSource:
+    position: glm.vec4
+    ambient: glm.vec3
+    diffuse: glm.vec3
+    specular: glm.vec3
+
+@dataclasses.dataclass
 class CursorStatus:
     button: typing.Dict[int, bool]
     position: glm.vec2
@@ -270,8 +277,25 @@ class Viewer:
 
         # Upload to uniform variable in the shader
         gl.glUseProgram(self.shader_program)
-        gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.shader_program, "mvp_matrix"), 
-                1, gl.GL_FALSE, glm.value_ptr(mvp_matrix))
+        gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.shader_program, "mv_matrix"), 
+                1, gl.GL_FALSE, glm.value_ptr(self.camera_property.transform_matrix))
+        gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.shader_program, "p_matrix"), 
+                1, gl.GL_FALSE, glm.value_ptr(perspective_matrix))
+
+        # Update light source
+        light_source = LightSource(
+            position = self.camera_property.transform_matrix * glm.vec4(100.0, 100.0, -100.0, 1.0), 
+            ambient = glm.vec3(1.0, 1.0, 1.0), 
+            diffuse = glm.vec3(1.0, 1.0, 1.0), 
+            specular = glm.vec3(1.0, 1.0, 1.0))
+        gl.glUniform4fv(gl.glGetUniformLocation(self.shader_program, "light_source.position"), 
+                1, glm.value_ptr(light_source.position))
+        gl.glUniform3fv(gl.glGetUniformLocation(self.shader_program, "light_source.ambient"), 
+                1, glm.value_ptr(light_source.ambient))
+        gl.glUniform3fv(gl.glGetUniformLocation(self.shader_program, "light_source.diffuse"), 
+                1, glm.value_ptr(light_source.diffuse))
+        gl.glUniform3fv(gl.glGetUniformLocation(self.shader_program, "light_source.specular"), 
+                1, glm.value_ptr(light_source.specular))
 
     def window_size_callback(self, window: glfw._GLFWwindow, new_width: int, new_height: int):
         """
@@ -508,6 +532,10 @@ class Viewer:
         is_loaded = Viewer.load_shader(vert_shader, f"{os.path.dirname(__file__)}/glsl/vertex.glsl")
         if not is_loaded: sys.exit()
 
+        geom_shader = gl.glCreateShader(gl.GL_GEOMETRY_SHADER)
+        is_loaded = Viewer.load_shader(geom_shader, f"{os.path.dirname(__file__)}/glsl/geometry.glsl")
+        if not is_loaded: sys.exit()
+
         frag_shader = gl.glCreateShader(gl.GL_FRAGMENT_SHADER)
         is_loaded = Viewer.load_shader(frag_shader, f"{os.path.dirname(__file__)}/glsl/fragment.glsl")
         if not is_loaded: sys.exit()
@@ -517,8 +545,10 @@ class Viewer:
 
         # Bind shader objects
         gl.glAttachShader(self.shader_program, vert_shader)
+        gl.glAttachShader(self.shader_program, geom_shader)
         gl.glAttachShader(self.shader_program, frag_shader)
         gl.glDeleteShader(vert_shader)
+        gl.glDeleteShader(geom_shader)
         gl.glDeleteShader(frag_shader)
 
         # Link shader program
@@ -648,11 +678,14 @@ class Viewer:
         # Draw new buffer
         #========================================
         # Initialize
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
         #gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
 
         # Bind program
         gl.glUseProgram(self.shader_program)
+        gl.glEnable(gl.GL_DEPTH_TEST)
+        gl.glDepthFunc(gl.GL_LESS)
+        gl.glDepthRange(-1.0, 1.0)
 
         # Draw model
         if len(self.model_indices) // 3 > 0:
