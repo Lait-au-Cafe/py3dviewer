@@ -688,7 +688,7 @@ class Viewer:
         gl.glDepthRange(-1.0, 1.0)
 
         # Draw model
-        if len(self.model_indices) // 3 > 0:
+        if len(self.model_vertices) > 0:
             # Bind buffer
             gl.glBindVertexArray(self.va_object)
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
@@ -698,9 +698,15 @@ class Viewer:
             gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture)
 
             # Draw
-            #gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(self.model_vertices) // 3)
-            gl.glDrawElements(gl.GL_TRIANGLES, len(self.model_indices), 
-                    gl.GL_UNSIGNED_INT, None)
+            if len(self.model_indices) // 3 >= 1:
+                gl.glDrawElements(gl.GL_TRIANGLES, len(self.model_indices), 
+                        gl.GL_UNSIGNED_INT, None)
+            elif len(self.model_vertices) // 3 >= 3 and len(self.model_uvmap) // 2 >= 3:
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, len(self.model_vertices) // 3)
+            else:
+                # NOT IMPLEMENTED: Need to bypass geometry shader. 
+                #gl.glDrawArrays(gl.GL_POINTS, 0, len(self.model_vertices) // 3)
+                pass
 
             # Unbind
             gl.glBindVertexArray(0)
