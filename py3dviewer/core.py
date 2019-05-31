@@ -273,18 +273,18 @@ class Viewer:
                 self.camera_property.clipping_distance[1])
 
         # Compose MVP matrix
-        mvp_matrix = perspective_matrix * self.camera_property.transform_matrix
+        mv_matrix = glm.scale(self.camera_property.transform_matrix, glm.vec3(1.0, 1.0, -1.0))
 
         # Upload to uniform variable in the shader
         gl.glUseProgram(self.shader_program)
         gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.shader_program, "mv_matrix"), 
-                1, gl.GL_FALSE, glm.value_ptr(self.camera_property.transform_matrix))
+                1, gl.GL_FALSE, glm.value_ptr(mv_matrix))
         gl.glUniformMatrix4fv(gl.glGetUniformLocation(self.shader_program, "p_matrix"), 
                 1, gl.GL_FALSE, glm.value_ptr(perspective_matrix))
 
         # Update light source
         light_source = LightSource(
-            position = self.camera_property.transform_matrix * glm.vec4(100.0, 100.0, -100.0, 1.0), 
+            position = mv_matrix * glm.vec4(100.0, 100.0, 100.0, 1.0), 
             ambient = glm.vec3(1.0, 1.0, 1.0), 
             diffuse = glm.vec3(1.0, 1.0, 1.0), 
             specular = glm.vec3(1.0, 1.0, 1.0))
@@ -508,7 +508,7 @@ class Viewer:
         print("- Setting camera parameters.")
         # Transform matrix
         trans = glm.vec3(0., 0., 50.)
-        rot = glm.vec3(0.)
+        rot = glm.vec3(0., 0., 0.)
         transform_matrix = glm.mat4(1.)
         transform_matrix = glm.translate(transform_matrix, trans)
         transform_matrix = glm.rotate(transform_matrix, glm.radians(rot.x), glm.vec3(1., 0., 0.))
